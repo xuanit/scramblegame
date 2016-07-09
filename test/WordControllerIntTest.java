@@ -1,8 +1,19 @@
 import org.junit.Test;
+import play.Environment;
+import play.Mode;
+import play.libs.ws.WSClient;
+import play.libs.ws.WSResponse;
+import play.test.TestServer;
 
-import static org.junit.Assert.assertTrue;
+import java.io.File;
+import java.util.concurrent.CompletionStage;
+
+import static org.junit.Assert.*;
 import static play.test.Helpers.*;
 import static play.test.Helpers.HTMLUNIT;
+
+import play.Application;
+import play.inject.guice.GuiceApplicationBuilder;
 
 /**
  * Created by xuan on 7/8/2016.
@@ -14,9 +25,5 @@ public class WordControllerIntTest {
      */
     @Test
     public void test() {
-        running(testServer(3333, fakeApplication(inMemoryDatabase())), HTMLUNIT, browser -> {
-            browser.goTo("http://localhost:3333");
-            assertTrue(browser.pageSource().contains("Your new application is ready."));
-        });
     }
 }

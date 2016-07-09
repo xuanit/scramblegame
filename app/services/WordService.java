@@ -33,6 +33,7 @@ public class WordService  implements IWordService {
     public CheckResponse checkWord(CheckRequest checkRequest) {
         Word word = this.wordRepository.findByWord(checkRequest.getCheckingWord());
         CheckResponse response = new CheckResponse();
+        response.setCheckedWord(checkRequest.getCheckingWord());
         if(word != null) {
             response.setValid(true);
         }else{

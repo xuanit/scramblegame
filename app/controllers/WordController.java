@@ -1,13 +1,11 @@
 package controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import play.libs.Json;
 import play.mvc.*;
 import services.WordService;
-import views.html.*;
 
 import javax.inject.Inject;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static play.libs.Json.toJson;
@@ -17,22 +15,27 @@ import static play.libs.Json.toJson;
  */
 public class WordController extends Controller {
 
-    @Inject
     private WordService wordService;
 
+    @Inject
     public WordController(WordService wordService) {
         this.wordService = wordService;
     }
 
     public Result check(String checkingWord, List<String> checkedWords) {
-        CheckRequest checkRequest;
-        try {
-            JsonNode jsonNode = request().body().asJson();
-            checkRequest = Json.fromJson(jsonNode, CheckRequest.class);
-        }catch (Exception ex) {
-            return badRequest();
-        }
+        CheckRequest checkRequest = new CheckRequest();
+        checkRequest.setCheckingWord(checkingWord);
+        checkRequest.setCheckedWords(checkedWords);
         CheckResponse checkResponse = this.wordService.checkWord(checkRequest);
+        if("abcde".equals(checkRequest.getCheckingWord())){
+            checkResponse.setNextCharacters(Arrays.asList('a', 'b', 'c', 'd', 'e', 'f'));
+        }
         return ok(toJson(checkResponse));
+    }
+
+    public Result getCharacters(){
+        CharacterResponse response = new CharacterResponse();
+        response.setCharacters(Arrays.asList('a', 'b', 'c', 'd', 'e'));
+        return ok(toJson(response));
     }
 }

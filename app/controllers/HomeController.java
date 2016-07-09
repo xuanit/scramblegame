@@ -18,7 +18,7 @@ public class HomeController extends Controller {
      */
     public Result index() {
         Result x;
-        return ok(index.render("Your new application is ready."));
+        return ok(scramblegame.render());
     }
 
 }

@@ -39,7 +39,8 @@ public class WordServiceTest {
         CheckResponse response = this.wordService.checkWord(request);
         assertNotNull(response);
         assertEquals(true, response.isValid());
-        assertEquals(null, response.getNextWord());
+        assertEquals(request.getCheckingWord(), response.getCheckedWord());
+        assertEquals(null, response.getNextCharacters());
     }
 
     @Test

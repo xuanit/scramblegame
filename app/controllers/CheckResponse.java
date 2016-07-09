@@ -1,5 +1,7 @@
 package controllers;
 
+import java.util.List;
+
 /**
  * Created by xuan on 7/7/2016.
  */
@@ -15,13 +17,23 @@ public class CheckResponse {
 
     private boolean valid;
 
-    public String getNextWord() {
-        return nextWord;
+    public String getCheckedWord() {
+        return checkedWord;
     }
 
-    public void setNextWord(String nextWord) {
-        this.nextWord = nextWord;
+    public void setCheckedWord(String checkedWord) {
+        this.checkedWord = checkedWord;
     }
 
-    private String nextWord;
+    private String checkedWord;
+
+    public List<Character> getNextCharacters() {
+        return nextCharacters;
+    }
+
+    public void setNextCharacters(List<Character> nextCharacters) {
+        this.nextCharacters = nextCharacters;
+    }
+
+    private List<Character> nextCharacters;
 }
