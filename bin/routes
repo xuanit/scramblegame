@@ -12,7 +12,10 @@ GET     /message                    controllers.AsyncController.message
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
-# An example controller showing how to write asynchronous code
+
 GET     /words/characters                   controllers.WordController.getCharacters()
-# An example controller showing how to write asynchronous code
+
 GET     /words                   controllers.WordController.check(checkingWord: String, checkedWords: java.util.List[String])
+
+
+GET     /words/all                   controllers.WordController.getAllWords(scrambledWord: String)

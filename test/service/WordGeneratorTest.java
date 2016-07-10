@@ -23,14 +23,14 @@ public class WordGeneratorTest {
 
     @Test
     public void testGenerateOnCharacter(){
-        Set<String> words = this.wordGenerator.generate("a");
+        Set<String> words = this.wordGenerator.generate("a", 1);
         assertEquals(1, words.size());
         assertTrue(words.contains("a"));
     }
 
     @Test
     public void testGenerateTwoCharacters(){
-        Set<String> words = this.wordGenerator.generate("ab");
+        Set<String> words = this.wordGenerator.generate("ab", 2);
         assertEquals(4, words.size());
         assertTrue(words.contains("a"));
         assertTrue(words.contains("b"));
@@ -40,8 +40,14 @@ public class WordGeneratorTest {
 
     @Test
     public void testGenerateThreeCharacters(){
-        Set<String> words = this.wordGenerator.generate("abc");
+        Set<String> words = this.wordGenerator.generate("abc", 3);
         assertEquals(15, words.size());
+    }
+
+    @Test
+    public void testGenerateWithMaxLengthOf2() {
+        Set<String> words = this.wordGenerator.generate("abcd", 3);
+        assertEquals(40, words.size());
     }
 
     @Test
@@ -80,10 +86,26 @@ public class WordGeneratorTest {
 
     @Test
     public void stressTestGenerate(){
-        Set<String> words = this.wordGenerator.generate("1234567");
+        Set<String> words = this.wordGenerator.generate("123456789012345678901234567890", 4);
         System.out.print("Stress test");
         System.out.print(words.size());
 
+    }
+
+    @Test
+    public void testGetShuffledCharacters(){
+        String word = "word";
+        List<Character> characters = this.wordGenerator.shuffleCharacters(word);
+        assertEquals(word.length(), characters.size());
+        StringBuilder builder = new StringBuilder(characters.size());
+        for(Character ch: characters)
+        {
+            builder.append(ch);
+        }
+        assertNotEquals(word, builder.toString());
+        for(Character character : characters) {
+            assertTrue(word.contains(String.valueOf(character)));
+        }
     }
 
 }

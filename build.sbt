@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   javaJpa,
   "org.hibernate" % "hibernate-entitymanager" % "5.1.0.Final",
   "org.mockito" % "mockito-all"  % "1.9.5",
-  "mysql" % "mysql-connector-java" % "5.1.6"
+  "mysql" % "mysql-connector-java" % "5.1.6",
+  "com.google.guava" % "guava" % "19.0"
 )
 
 // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present

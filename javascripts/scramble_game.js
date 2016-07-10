@@ -13,7 +13,7 @@ var CharacterList = React.createClass({
         var characterNodes = this.props.characters.map(function(character){
             return (<span>{character} </span>);
         });
-        return (<div>Characters: {characterNodes}</div>);
+        return (<h3>Characters: {characterNodes}</h3>);
     }
 });
 
@@ -23,23 +23,50 @@ var WordList = React.createClass({
         {
             return (<li key={word}>{word}</li>);
         });
-        return (<div>Your correct answers:
+        return (
             <ul>
                 {wordNodes}
             </ul>
-        </div>);
+        );
     }
 });
 
 var GuessingWord = React.createClass({
     render: function(){
-        return (<div>Your guess: {this.props.word}</div>);
+        var invalidText = null;
+        if(this.props.invalid) {
+            invalidText = (<div>Invalid word</div>);
+        }
+        return (
+        <div>
+            <h3>Your guess: {this.props.word}</h3>
+            {invalidText}
+         </div>
+         );
+    }
+});
+
+var GiveUpInfoControl = React.createClass({
+    render: function(){
+        var wordListNode = null;
+        if(this.props.words.length > 0) {
+            wordListNode = (<div>
+                                <div>You miss {this.props.missingWordsCount} word(s)</div>
+                                <div>All possible words: </div>
+                                <WordList words={this.props.words}/>
+                            </div>)
+        }
+        return (
+            <div>
+                {wordListNode}
+             </div>
+        )
     }
 });
 
 var ScrambleGame = React.createClass({
     getInitialState: function(){
-        return {guessingWord: '', checkedWords: [], characters: [], initialCharacters: [], level: 0};
+        return {guessingWord: '', checkedWords: [], characters: [], initialCharacters: [], level: 0, invalid: false, words: []};
     },
     render: function(){
         return (
@@ -47,10 +74,19 @@ var ScrambleGame = React.createClass({
                 <h2>Scramble Game</h2>
                 <Level level={this.state.level} />
                 <CharacterList characters={this.state.characters}/>
-                 <WordList words={this.state.checkedWords}/>
-                <GuessingWord word={this.state.guessingWord}/>
+                <GiveUpInfoControl  words={this.state.words} missingWordsCount={this.state.words.length - this.state.checkedWords.length}/>
+                <div>Your correct answers:
+                    <WordList words={this.state.checkedWords}/>
+                </div>
+                <GuessingWord word={this.state.guessingWord} invalid={this.state.invalid}/>
+                <button onClick={this.onGiveUpClick}>Give up</button>
             </div>
         );
+    },
+    onGiveUpClick: function(e){
+        $.get('/words/all',{}, function(data){
+            this.setState({words: data.words});
+        }.bind(this));
     },
     onKeyPressed: function(e){
         switch (e.which)
@@ -70,7 +106,7 @@ var ScrambleGame = React.createClass({
             {
                 if(('A'.charCodeAt() <= e.which && e.which <= 'Z'.charCodeAt()) ||
                  ('a'.charCodeAt() <= e.which && e.which <= 'z'.charCodeAt())) {
-                    this.validCharacterPressed(String.fromCharCode(e.which));
+                    this.validCharacterPressed(String.fromCharCode(e.which).toLowerCase());
                 }
             }
         }
@@ -80,13 +116,14 @@ var ScrambleGame = React.createClass({
             var character = this.state.guessingWord.substring(this.state.guessingWord.length - 1);
             var newGuessingWord = this.state.guessingWord.substring(0, this.state.guessingWord.length - 1);
             this.state.characters.push(character);
-            this.setState({guessingWord: newGuessingWord, characters: this.state.characters});
+            this.setState({guessingWord: newGuessingWord, characters: this.state.characters, invalid: false});
         }
     },
     submitWord: function(){
         if(this.state.guessingWord.length == 0) {
             return;
         }
+        $.ajaxSetup({ traditional: true });
         $.get('/words',{ checkingWord: this.state.guessingWord, checkedWords: this.state.checkedWords }, function(data){
            if(data.valid) {
                 var checkedWords = this.state.checkedWords;
@@ -96,12 +133,14 @@ var ScrambleGame = React.createClass({
                 if(data.nextCharacters){
                     var characters = this.shallowCopyArray(data.nextCharacters);
                     this.setState({guessingWord: '', checkedWords: [], characters: characters,
-                    initialCharacters: data.nextCharacters, level: this.state.level + 1});
+                    initialCharacters: data.nextCharacters, level: this.state.level + 1, words: []});
                 }else{
                     var characters = this.shallowCopyArray(this.state.initialCharacters);
                     this.setState({guessingWord: '', checkedWords: checkedWords, characters: characters});
                 }
 
+           }else{
+            this.setState({invalid: true});
            }
         }.bind(this));
     },
@@ -111,12 +150,12 @@ var ScrambleGame = React.createClass({
         if(index > -1){
             characters.splice(index, 1);
             var guessingWord = this.state.guessingWord + character;
-            this.setState({guessingWord: guessingWord, characters: characters})
+            this.setState({guessingWord: guessingWord, characters: characters, invalid: false})
         }
     },
     componentDidMount: function(){
         this.loadCharacters();
-        $(document).on("keypress", this.onKeyPressed);
+        $(document).on("keydown", this.onKeyPressed);
     },
     shallowCopyArray: function(srcArray) {
         var descArray = new Array(srcArray.length);

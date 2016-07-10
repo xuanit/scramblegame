@@ -76,7 +76,7 @@
 	            );
 	        });
 	        return React.createElement(
-	            "div",
+	            "h3",
 	            null,
 	            "Characters: ",
 	            characterNodes
@@ -96,14 +96,9 @@
 	            );
 	        });
 	        return React.createElement(
-	            "div",
+	            "ul",
 	            null,
-	            "Your correct answers:",
-	            React.createElement(
-	                "ul",
-	                null,
-	                wordNodes
-	            )
+	            wordNodes
 	        );
 	    }
 	});
@@ -112,11 +107,56 @@
 	    displayName: "GuessingWord",
 
 	    render: function render() {
+	        var invalidText = null;
+	        if (this.props.invalid) {
+	            invalidText = React.createElement(
+	                "div",
+	                null,
+	                "Invalid word"
+	            );
+	        }
 	        return React.createElement(
 	            "div",
 	            null,
-	            "Your guess: ",
-	            this.props.word
+	            React.createElement(
+	                "h3",
+	                null,
+	                "Your guess: ",
+	                this.props.word
+	            ),
+	            invalidText
+	        );
+	    }
+	});
+
+	var GiveUpInfoControl = React.createClass({
+	    displayName: "GiveUpInfoControl",
+
+	    render: function render() {
+	        var wordListNode = null;
+	        if (this.props.words.length > 0) {
+	            wordListNode = React.createElement(
+	                "div",
+	                null,
+	                React.createElement(
+	                    "div",
+	                    null,
+	                    "You miss ",
+	                    this.props.missingWordsCount,
+	                    " word(s)"
+	                ),
+	                React.createElement(
+	                    "div",
+	                    null,
+	                    "All possible words: "
+	                ),
+	                React.createElement(WordList, { words: this.props.words })
+	            );
+	        }
+	        return React.createElement(
+	            "div",
+	            null,
+	            wordListNode
 	        );
 	    }
 	});
@@ -125,7 +165,7 @@
 	    displayName: "ScrambleGame",
 
 	    getInitialState: function getInitialState() {
-	        return { guessingWord: '', checkedWords: [], characters: [], initialCharacters: [], level: 0 };
+	        return { guessingWord: '', checkedWords: [], characters: [], initialCharacters: [], level: 0, invalid: false, words: [] };
 	    },
 	    render: function render() {
 	        return React.createElement(
@@ -138,9 +178,25 @@
 	            ),
 	            React.createElement(Level, { level: this.state.level }),
 	            React.createElement(CharacterList, { characters: this.state.characters }),
-	            React.createElement(WordList, { words: this.state.checkedWords }),
-	            React.createElement(GuessingWord, { word: this.state.guessingWord })
+	            React.createElement(GiveUpInfoControl, { words: this.state.words, missingWordsCount: this.state.words.length - this.state.checkedWords.length }),
+	            React.createElement(
+	                "div",
+	                null,
+	                "Your correct answers:",
+	                React.createElement(WordList, { words: this.state.checkedWords })
+	            ),
+	            React.createElement(GuessingWord, { word: this.state.guessingWord, invalid: this.state.invalid }),
+	            React.createElement(
+	                "button",
+	                { onClick: this.onGiveUpClick },
+	                "Give up"
+	            )
 	        );
+	    },
+	    onGiveUpClick: function onGiveUpClick(e) {
+	        $.get('/words/all', {}, function (data) {
+	            this.setState({ words: data.words });
+	        }.bind(this));
 	    },
 	    onKeyPressed: function onKeyPressed(e) {
 	        switch (e.which) {
@@ -158,7 +214,7 @@
 	            default:
 	                {
 	                    if ('A'.charCodeAt() <= e.which && e.which <= 'Z'.charCodeAt() || 'a'.charCodeAt() <= e.which && e.which <= 'z'.charCodeAt()) {
-	                        this.validCharacterPressed(String.fromCharCode(e.which));
+	                        this.validCharacterPressed(String.fromCharCode(e.which).toLowerCase());
 	                    }
 	                }
 	        }
@@ -168,13 +224,14 @@
 	            var character = this.state.guessingWord.substring(this.state.guessingWord.length - 1);
 	            var newGuessingWord = this.state.guessingWord.substring(0, this.state.guessingWord.length - 1);
 	            this.state.characters.push(character);
-	            this.setState({ guessingWord: newGuessingWord, characters: this.state.characters });
+	            this.setState({ guessingWord: newGuessingWord, characters: this.state.characters, invalid: false });
 	        }
 	    },
 	    submitWord: function submitWord() {
 	        if (this.state.guessingWord.length == 0) {
 	            return;
 	        }
+	        $.ajaxSetup({ traditional: true });
 	        $.get('/words', { checkingWord: this.state.guessingWord, checkedWords: this.state.checkedWords }, function (data) {
 	            if (data.valid) {
 	                var checkedWords = this.state.checkedWords;
@@ -184,11 +241,13 @@
 	                if (data.nextCharacters) {
 	                    var characters = this.shallowCopyArray(data.nextCharacters);
 	                    this.setState({ guessingWord: '', checkedWords: [], characters: characters,
-	                        initialCharacters: data.nextCharacters, level: this.state.level + 1 });
+	                        initialCharacters: data.nextCharacters, level: this.state.level + 1, words: [] });
 	                } else {
 	                    var characters = this.shallowCopyArray(this.state.initialCharacters);
 	                    this.setState({ guessingWord: '', checkedWords: checkedWords, characters: characters });
 	                }
+	            } else {
+	                this.setState({ invalid: true });
 	            }
 	        }.bind(this));
 	    },
@@ -198,12 +257,12 @@
 	        if (index > -1) {
 	            characters.splice(index, 1);
 	            var guessingWord = this.state.guessingWord + character;
-	            this.setState({ guessingWord: guessingWord, characters: characters });
+	            this.setState({ guessingWord: guessingWord, characters: characters, invalid: false });
 	        }
 	    },
 	    componentDidMount: function componentDidMount() {
 	        this.loadCharacters();
-	        $(document).on("keypress", this.onKeyPressed);
+	        $(document).on("keydown", this.onKeyPressed);
 	    },
 	    shallowCopyArray: function shallowCopyArray(srcArray) {
 	        var descArray = new Array(srcArray.length);

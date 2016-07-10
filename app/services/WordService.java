@@ -3,12 +3,11 @@ package services;
 import controllers.CheckRequest;
 import controllers.CheckResponse;
 import entity.Word;
-import play.db.jpa.JPAApi;
 import repository.WordRepository;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
+import java.util.*;
 
 /**
  * Created by xuan on 7/8/2016.
@@ -16,18 +15,16 @@ import javax.persistence.EntityManager;
 @Singleton
 public class WordService  implements IWordService {
 
-    @Inject
+    public static final int MAX_LENGTH = 3;
+
     private WordRepository wordRepository;
 
-    @Inject
     private WordGenerator wordGenerator;
 
-    public WordRepository getWordRepository() {
-        return wordRepository;
-    }
-
-    public void setWordRepository(WordRepository wordRepository) {
+    @Inject
+    public WordService(WordRepository wordRepository, WordGenerator wordGenerator) {
         this.wordRepository = wordRepository;
+        this.wordGenerator = wordGenerator;
     }
 
     public CheckResponse checkWord(CheckRequest checkRequest) {
@@ -36,9 +33,61 @@ public class WordService  implements IWordService {
         response.setCheckedWord(checkRequest.getCheckingWord());
         if(word != null) {
             response.setValid(true);
+            checkRequest.getCheckedWords().add(checkRequest.getCheckingWord());
+            List<String> words = getAllWords(checkRequest.getScrambledWord());
+            if(words.size() == checkRequest.getCheckedWords().size()) {
+                Collections.sort(words);
+                Collections.sort(checkRequest.getCheckedWords());
+                if(words.equals(checkRequest.getCheckedWords())) {
+                    response.setNextCharacters(this.getCharacters());
+                }
+            }
         }else{
             response.setValid(false);
         }
         return response;
     }
+
+    /**
+     * Gets all words generated from characters of the provided words.
+     * @param providedWord a word containing characters to generate new words.
+     * @return list of words.
+     */
+    public List<String> getAllWords(String providedWord) {
+        Set<String> combinations = this.wordGenerator.generate(providedWord, MAX_LENGTH);
+        List<Word> words = new ArrayList<>();
+        char[] sortedProvidedCharacters = providedWord.toCharArray();
+        Arrays.sort(sortedProvidedCharacters);
+        List<String> matchedWordStrings = new ArrayList<>();
+        words.addAll(this.wordRepository.findByIndexWords(combinations));
+        for(Word word : words) {
+            char[] sortedCharacters = word.getWord().toCharArray();
+            int numOfMatches = 0;
+            Arrays.sort(sortedCharacters);
+            int charIndex = 0;
+            int providedCharIndex = 0;
+            while(charIndex < sortedCharacters.length && providedCharIndex < sortedProvidedCharacters.length) {
+                char checkingChar = sortedCharacters[charIndex];
+                while (providedCharIndex < sortedProvidedCharacters.length ) {
+                    if(sortedProvidedCharacters[providedCharIndex] == checkingChar) {
+                        numOfMatches++;
+                        break;
+                    }
+                    providedCharIndex++;
+                }
+                providedCharIndex++;
+                charIndex++;
+            }
+            if(numOfMatches == sortedCharacters.length) {
+                matchedWordStrings.add(word.getWord());
+            }
+        }
+        return matchedWordStrings;
+    }
+
+    public List<Character> getCharacters(){
+        String word = this.wordRepository.getRandomWord();
+        return this.wordGenerator.shuffleCharacters(word);
+    }
+
 }

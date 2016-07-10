@@ -1,5 +1,7 @@
 package services;
 
+import com.google.common.collect.Lists;
+
 import javax.inject.Singleton;
 import java.util.*;
 
@@ -8,10 +10,13 @@ import java.util.*;
  */
 @Singleton
 public class WordGenerator {
-    public Set<String> generate(String scrambledWord){
-        char[] characters = scrambledWord.toCharArray();
+    public Set<String> generate(String word, int maxLength){
+        if(maxLength < 1 || maxLength > word.length()){
+            throw new IllegalArgumentException("Invalid max length of " + maxLength);
+        }
+        char[] characters = word.toCharArray();
         Set<String> words = new HashSet<String>();
-        for(int length = 1; length <= characters.length; ++length) {
+        for(int length = 1; length <= maxLength; ++length) {
             words.addAll(compeleteWord(characters, new HashSet<Integer>(), length, new char[length]));
         }
         return words;
@@ -32,5 +37,11 @@ public class WordGenerator {
             }
         }
         return words;
+    }
+
+    public List<Character> shuffleCharacters(String word) {
+        List<Character> characters = new ArrayList<>(Lists.charactersOf(word));
+        Collections.shuffle(characters);
+        return characters;
     }
 }

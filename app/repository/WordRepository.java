@@ -3,6 +3,7 @@ package repository;
 import com.google.inject.ImplementedBy;
 import entity.Word;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,5 +13,7 @@ import java.util.List;
 public interface WordRepository {
     Word findByWord(String word);
 
-    List<Word> findByWords(List<String> words);
+    Collection<Word> findByIndexWords(Collection<String> indexWords);
+
+    String getRandomWord();
 }
