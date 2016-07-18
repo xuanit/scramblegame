@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by xuan on 7/9/2016.
  */
-public class CharacterResponse {
+public class CharactersResponse {
 
     public List<Character> getCharacters() {
         return characters;

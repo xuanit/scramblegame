@@ -23,7 +23,7 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 public class JPAWordRepositoryTest {
 
-    private JPAWordRepository jpaWordRepository;
+    private WordRepository jpaWordRepository;
 
     @Mock
     private JPAApi jpaApi;
@@ -36,7 +36,7 @@ public class JPAWordRepositoryTest {
 
     @Before
     public void init() {
-        this.jpaWordRepository = new JPAWordRepository(jpaApi);
+        this.jpaWordRepository = new WordRepository(jpaApi);
         when(jpaApi.em()).thenReturn(entityManager);
         when(entityManager.createNativeQuery(anyString(), any(Class.class))).thenReturn(query);
         when(query.setParameter(anyString(), anyObject())).thenReturn(query);

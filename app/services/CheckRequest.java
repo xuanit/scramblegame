@@ -1,4 +1,4 @@
-package controllers;
+package services;
 
 import java.util.List;
 
@@ -13,6 +13,15 @@ public class CheckRequest {
 
     private List<String> checkedWords;
 
+    public int getNumOfWords() {
+        return numOfWords;
+    }
+
+    public void setNumOfWords(int numOfWords) {
+        this.numOfWords = numOfWords;
+    }
+
+    private int numOfWords;
 
     public String getScrambledWord() {
         return scrambledWord;

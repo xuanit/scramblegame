@@ -197,6 +197,8 @@
 	        $.get('/words/all', {}, function (data) {
 	            this.setState({ words: data.words });
 	        }.bind(this));
+	        e.preventDefault();
+	        e.target.blur();
 	    },
 	    onKeyPressed: function onKeyPressed(e) {
 	        switch (e.which) {

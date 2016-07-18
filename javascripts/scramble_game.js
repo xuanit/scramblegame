@@ -87,6 +87,8 @@ var ScrambleGame = React.createClass({
         $.get('/words/all',{}, function(data){
             this.setState({words: data.words});
         }.bind(this));
+        e.preventDefault();
+        e.target.blur();
     },
     onKeyPressed: function(e){
         switch (e.which)

@@ -11,11 +11,14 @@ import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import play.libs.Json;
 import play.mvc.Http;
 import play.mvc.Result;
+import services.CheckRequest;
+import services.CheckResponse;
 import services.WordService;
 
 import java.util.*;
@@ -59,6 +62,7 @@ public class WordControllerTest {
 
         flashData = new HashMap<>();
         flashData.put(WordController.PROVIDED_WORD_SESSION, "test");
+        flashData.put(WordController.NUM_WORDS_SESSION, "1");
         Map<String, Object> argData = Collections.emptyMap();
         Long id = 2L;
         play.api.mvc.RequestHeader header = mock(play.api.mvc.RequestHeader.class);
@@ -85,15 +89,26 @@ public class WordControllerTest {
         CheckResponse checkResponse = new CheckResponse();
         checkResponse.setValid(true);
         checkResponse.setNextCharacters(Lists.charactersOf("nextChars"));
+        List<String> words = Arrays.asList("a", "b");
         when(this.wordService.checkWord(any(CheckRequest.class))).thenReturn(checkResponse);
+        when(this.wordService.getAllWords(anyString())).thenReturn(words);
+        String originalNumOfWordsString = wordController.session(WordController.NUM_WORDS_SESSION);
         Result result = this.wordController.check(this.checkRequest.getCheckingWord(), Arrays.asList("checkedWords"));
         Assert.assertEquals(200, result.status());
         JsonNode jsonNode = Json.parse(contentAsString(result));
         CheckResponse response = Json.fromJson(jsonNode, CheckResponse.class);
         assertEquals(true, response.isValid());
-        verify(this.wordService).checkWord(any(CheckRequest.class));
+        verify(this.wordService).checkWord(argThat(new ArgumentMatcher<CheckRequest>() {
+            @Override
+            public boolean matches(Object o) {
+
+                return String.valueOf(((CheckRequest)o).getNumOfWords()).equals(originalNumOfWordsString);
+            }
+        }));
+        verify(this.wordService).getAllWords(anyString());
         assertEquals(checkResponse.getNextCharacters(), response.getNextCharacters());
         assertEquals("nextChars", this.wordController.session(WordController.PROVIDED_WORD_SESSION));
+        assertEquals(String.valueOf(words.size()), this.wordController.session(WordController.NUM_WORDS_SESSION));
     }
 
     @Test
@@ -112,12 +127,15 @@ public class WordControllerTest {
     public void testGetWord(){
         String word = "returningWord";
         when(this.wordService.getCharacters()).thenReturn(Lists.charactersOf(word));
+        List<String> words = Arrays.asList("a", "b");
+        when(this.wordService.getAllWords(any())).thenReturn(words);
         Result result = this.wordController.getCharacters();
         assertEquals(200, result.status());
         JsonNode jsonNode = Json.parse(contentAsString(result));
-        CharacterResponse response = Json.fromJson(jsonNode, CharacterResponse.class);
+        CharactersResponse response = Json.fromJson(jsonNode, CharactersResponse.class);
         assertEquals(Lists.charactersOf(word), response.getCharacters());
         assertEquals(word, this.wordController.session(WordController.PROVIDED_WORD_SESSION));
+        assertEquals(String.valueOf(words.size()), this.wordController.session(WordController.NUM_WORDS_SESSION));
     }
 
     @Test

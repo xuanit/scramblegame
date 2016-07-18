@@ -1,4 +1,4 @@
-package controllers;
+package services;
 
 import java.util.List;
 
@@ -36,4 +36,14 @@ public class CheckResponse {
     }
 
     private List<Character> nextCharacters;
+
+    public int getNumOfWords() {
+        return numOfWords;
+    }
+
+    public void setNumOfWords(int numOfWords) {
+        this.numOfWords = numOfWords;
+    }
+
+    private int numOfWords;
 }

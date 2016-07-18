@@ -1,9 +1,7 @@
 package services;
 
-import controllers.CheckRequest;
-import controllers.CheckResponse;
 import entity.Word;
-import repository.WordRepository;
+import repository.IWordRepository;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,16 +15,20 @@ public class WordService  implements IWordService {
 
     public static final int MAX_LENGTH = 3;
 
-    private WordRepository wordRepository;
+    private IWordRepository wordRepository;
 
-    private WordGenerator wordGenerator;
+    private WordUtils wordGenerator;
 
     @Inject
-    public WordService(WordRepository wordRepository, WordGenerator wordGenerator) {
+    public WordService(IWordRepository wordRepository, WordUtils wordGenerator) {
         this.wordRepository = wordRepository;
         this.wordGenerator = wordGenerator;
     }
 
+
+    /**
+     *@inheritDoc
+     */
     public CheckResponse checkWord(CheckRequest checkRequest) {
         Word word = this.wordRepository.findByWord(checkRequest.getCheckingWord());
         CheckResponse response = new CheckResponse();
@@ -34,12 +36,14 @@ public class WordService  implements IWordService {
         if(word != null) {
             response.setValid(true);
             checkRequest.getCheckedWords().add(checkRequest.getCheckingWord());
-            List<String> words = getAllWords(checkRequest.getScrambledWord());
-            if(words.size() == checkRequest.getCheckedWords().size()) {
-                Collections.sort(words);
-                Collections.sort(checkRequest.getCheckedWords());
-                if(words.equals(checkRequest.getCheckedWords())) {
-                    response.setNextCharacters(this.getCharacters());
+            if(checkRequest.getCheckedWords().size() == checkRequest.getNumOfWords()) {
+                List<String> words = getAllWords(checkRequest.getScrambledWord());
+                if(words.size() == checkRequest.getCheckedWords().size()) {
+                    Collections.sort(words);
+                    Collections.sort(checkRequest.getCheckedWords());
+                    if(words.equals(checkRequest.getCheckedWords())) {
+                        response.setNextCharacters(this.getCharacters());
+                    }
                 }
             }
         }else{
@@ -49,9 +53,7 @@ public class WordService  implements IWordService {
     }
 
     /**
-     * Gets all words generated from characters of the provided words.
-     * @param providedWord a word containing characters to generate new words.
-     * @return list of words.
+     * @inheritDoc
      */
     public List<String> getAllWords(String providedWord) {
         Set<String> combinations = this.wordGenerator.generate(providedWord, MAX_LENGTH);
@@ -85,6 +87,9 @@ public class WordService  implements IWordService {
         return matchedWordStrings;
     }
 
+    /**
+     * @inheritDoc
+     */
     public List<Character> getCharacters(){
         String word = this.wordRepository.getRandomWord();
         return this.wordGenerator.shuffleCharacters(word);

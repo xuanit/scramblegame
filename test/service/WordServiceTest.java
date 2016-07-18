@@ -1,8 +1,9 @@
 package service;
 
 import com.google.common.collect.Lists;
-import controllers.CheckRequest;
-import controllers.CheckResponse;
+import repository.IWordRepository;
+import services.CheckRequest;
+import services.CheckResponse;
 
 import entity.Word;
 import org.junit.Before;
@@ -10,8 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import repository.WordRepository;
-import services.WordGenerator;
+import services.WordUtils;
 import services.WordService;
 
 import java.util.*;
@@ -26,10 +26,10 @@ import static org.junit.Assert.*;
 public class WordServiceTest {
 
     @Mock
-    private WordRepository wordRepository;
+    private IWordRepository wordRepository;
 
     @Mock
-    private WordGenerator wordGenerator;
+    private WordUtils wordGenerator;
 
     private WordService wordService;
 
@@ -38,8 +38,23 @@ public class WordServiceTest {
         this.wordService = new WordService(this.wordRepository, this.wordGenerator);
     }
 
+
     @Test
-    public void testCheckValidWordWithoutNextCharacters() {
+    public void testCheckAValidWordButNotAllWordsChecked(){
+        CheckRequest request = new CheckRequest();
+        request.setScrambledWord("an");
+        request.setNumOfWords(2);
+        request.setCheckedWords(new ArrayList<>());
+        request.setCheckingWord("a");
+        when(this.wordRepository.findByWord(request.getCheckingWord())).thenReturn(new Word());
+        CheckResponse response = this.wordService.checkWord(request);
+        assertNotNull(response);
+        assertNull(response.getNextCharacters());
+        assertEquals(true, response.isValid());
+        verify(this.wordRepository, never()).findByIndexWords(any());
+    }
+    @Test
+    public void testCheckValidWordAndSomeInvalidCheckedWord() {
         Set<String> combinations = new HashSet<String>(Arrays.asList("a", "n", "an", "na"));
         List<Word> words = new ArrayList<>();
         for(String wordString : Arrays.asList("an", "a")) {
@@ -50,7 +65,8 @@ public class WordServiceTest {
         }
         CheckRequest request = new CheckRequest();
         request.setScrambledWord("an");
-        request.setCheckedWords(new ArrayList<String>());
+        request.setNumOfWords(2);
+        request.setCheckedWords(new ArrayList<>(Arrays.asList("bc")));
         request.setCheckingWord("a");
         when(this.wordRepository.findByWord(request.getCheckingWord())).thenReturn(new Word());
 
@@ -81,6 +97,7 @@ public class WordServiceTest {
         request.setCheckedWords(new ArrayList<String>());
         request.getCheckedWords().addAll(Arrays.asList("a"));
         request.setCheckingWord("an");
+        request.setNumOfWords(2);
         when(this.wordRepository.findByWord(request.getCheckingWord()))
                 .thenReturn(new Word(request.getCheckingWord(), request.getCheckingWord()));
 
@@ -111,6 +128,7 @@ public class WordServiceTest {
         request.setCheckedWords(new ArrayList<String>());
         request.getCheckedWords().addAll(Arrays.asList("a"));
         request.setCheckingWord("an");
+        request.setNumOfWords(2);
         when(this.wordRepository.findByWord(request.getCheckingWord()))
                 .thenReturn(new Word(request.getCheckingWord(), request.getCheckingWord()));
 

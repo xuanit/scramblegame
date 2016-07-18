@@ -9,7 +9,11 @@ import java.util.*;
  * Created by xuan on 7/8/2016.
  */
 @Singleton
-public class WordGenerator {
+public class WordUtils implements IWordUtils {
+
+    /**
+     * @inheritDoc
+     */
     public Set<String> generate(String word, int maxLength){
         if(maxLength < 1 || maxLength > word.length()){
             throw new IllegalArgumentException("Invalid max length of " + maxLength);
@@ -22,6 +26,14 @@ public class WordGenerator {
         return words;
     }
 
+    /**
+     * This is for internal use only.
+     * @param providedChars
+     * @param addedIndices
+     * @param length
+     * @param selectedChars
+     * @return
+     */
     public Set<String> compeleteWord(char[] providedChars, Set<Integer> addedIndices, int length, char[] selectedChars) {
         if(length == 0) {
             return new HashSet<String>(Arrays.asList(new String(selectedChars)));
@@ -39,6 +51,9 @@ public class WordGenerator {
         return words;
     }
 
+    /**
+     * @inheritDoc
+     */
     public List<Character> shuffleCharacters(String word) {
         List<Character> characters = new ArrayList<>(Lists.charactersOf(word));
         Collections.shuffle(characters);
